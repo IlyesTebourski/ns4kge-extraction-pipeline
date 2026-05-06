@@ -2,6 +2,7 @@ cff-version: 1.2.0
 message: "If you use this pipeline in scientific work, please cite the associated NO-FaCTS paper and this artifact release."
 title: "NS4KGE Extraction Pipeline"
 version: "1.0.0"
+doi: "10.5281/zenodo.20059136"
 date-released: 2026-05-06
 authors:
   - given-names: "Ilyes"

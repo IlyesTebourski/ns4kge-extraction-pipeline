@@ -45,6 +45,7 @@ dependencies = [
 Homepage = "https://github.com/IlyesTebourski/ns4kge-extraction-pipeline"
 Repository = "https://github.com/IlyesTebourski/ns4kge-extraction-pipeline"
 Issues = "https://github.com/IlyesTebourski/ns4kge-extraction-pipeline/issues"
+DOI = "https://doi.org/10.5281/zenodo.20059136"
 Ontology = "https://github.com/IlyesTebourski/ns4kge-ontology"
 "Knowledge Graph" = "https://github.com/IlyesTebourski/ns4kge-kg"
 
