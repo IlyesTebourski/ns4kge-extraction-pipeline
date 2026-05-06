@@ -1,0 +1,78 @@
+[project]
+name = "ns4kge-extraction-pipeline"
+version = "1.0.0"
+description = "LLM-assisted extraction pipeline for building the NS4KGE knowledge graph."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+authors = [
+  { name = "Ilyes Tebourski" },
+  { name = "Pierre-Henri Paris" },
+  { name = "Nicoleta Preda" },
+  { name = "Fatiha Sais" },
+]
+maintainers = [
+  { name = "Ilyes Tebourski" },
+]
+keywords = [
+  "knowledge graph embeddings",
+  "negative sampling",
+  "information extraction",
+  "semantic web",
+  "LLM",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Text Processing :: Linguistic",
+]
+dependencies = [
+  "anthropic>=0.52.0",
+  "openai>=1.80.0",
+  "pyshacl>=0.30.0",
+  "python-dotenv>=1.1.0",
+  "rdflib>=7.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/IlyesTebourski/ns4kge-extraction-pipeline"
+Repository = "https://github.com/IlyesTebourski/ns4kge-extraction-pipeline"
+Issues = "https://github.com/IlyesTebourski/ns4kge-extraction-pipeline/issues"
+Ontology = "https://github.com/IlyesTebourski/ns4kge-ontology"
+"Knowledge Graph" = "https://github.com/IlyesTebourski/ns4kge-kg"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3.0",
+]
+
+[project.scripts]
+nofacts-pipeline = "no_facts_pipeline.cli.pipeline_agnostic:main"
+nofacts-pipeline-claude = "no_facts_pipeline.cli.pipeline_claude:main"
+nofacts-pipeline-gpt = "no_facts_pipeline.cli.pipeline_gpt:main"
+nofacts-run-all = "no_facts_pipeline.cli.run_all:main"
+nofacts-preproc = "no_facts_pipeline.cli.preproc:main"
+nofacts-postproc = "no_facts_pipeline.cli.postproc:main"
+nofacts-populate-onto = "no_facts_pipeline.cli.populate_onto:main"
+nofacts-validate = "no_facts_pipeline.cli.validate:main"
+nofacts-gen-shapes = "no_facts_pipeline.cli.gen_shapes:main"
+nofacts-query = "no_facts_pipeline.cli.query:main"
+nofacts-debug = "no_facts_pipeline.cli.debug:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/no_facts_pipeline"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

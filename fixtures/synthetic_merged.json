@@ -1,0 +1,33 @@
+{
+  "Article": {
+    "title": "Synthetic Negative Sampling Paper",
+    "date": "2026"
+  },
+  "proposedNSMethod": "Fixture Negative Sampling",
+  "proposedKGEModel": "",
+  "mentionedNSMethods": [],
+  "mentionedKGEModels": [
+    "TransE"
+  ],
+  "Experimentation": {
+    "Hardware": [],
+    "TrainingProtocol": {
+      "LossFunction": [],
+      "Optimizer": [
+        "Adam"
+      ],
+      "learningRate": 0.001,
+      "nsRatio": 1
+    },
+    "Configurations": [
+      {
+        "Task": "Link Prediction",
+        "Dataset": "SYN-KG",
+        "Metric": "MRR",
+        "KGEModel": "TransE",
+        "NSMethod": "Fixture Negative Sampling",
+        "result": 0.42
+      }
+    ]
+  }
+}
