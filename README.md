@@ -18,7 +18,7 @@ LLM-assisted pipeline that extracts structured negative-sampling information fro
 - Release date: 2026-05-13.
 - License: Apache-2.0.
 - Zenodo DOI: `https://doi.org/10.5281/zenodo.20160460`.
-- Ontology artifact: `https://doi.org/10.5281/zenodo.20058306` and `https://github.com/IlyesTebourski/ns4kge-ontology`.
+- Ontology artifact: `https://doi.org/10.5281/zenodo.20160705` and `https://github.com/IlyesTebourski/ns4kge-ontology`.
 - KG artifact: `https://github.com/IlyesTebourski/ns4kge-kg`.
 
 The repository contains code, prompts, tests, and synthetic fixtures. It does not redistribute source article text.
