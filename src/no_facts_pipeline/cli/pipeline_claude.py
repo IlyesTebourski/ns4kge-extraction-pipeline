@@ -21,17 +21,40 @@ DEFAULT_MODEL = "claude-opus-4-6"
 DEFAULT_MAX_TOKENS = 20000
 
 
-def call(client: Anthropic, prompt: str, text: str, model: str, max_tokens: int) -> str:
-    response = client.messages.create(
+def call(
+    client: Anthropic,
+    prompt: str,
+    text: str,
+    model: str,
+    max_tokens: int,
+    stream: bool = False,
+) -> str:
+    if not stream:
+        response = client.messages.create(
+            model=model,
+            max_tokens=max_tokens,
+            messages=[{"role": "user", "content": f"{text}\n\n{prompt}"}],
+        )
+        print(
+            f"    Input tokens: {response.usage.input_tokens} | "
+            f"Output tokens: {response.usage.output_tokens}"
+        )
+        return response.content[0].text
+
+    chunks = []
+    with client.messages.stream(
         model=model,
         max_tokens=max_tokens,
         messages=[{"role": "user", "content": f"{text}\n\n{prompt}"}],
-    )
+    ) as stream_obj:
+        for chunk in stream_obj.text_stream:
+            chunks.append(chunk)
+        final = stream_obj.get_final_message()
     print(
-        f"    Input tokens: {response.usage.input_tokens} | "
-        f"Output tokens: {response.usage.output_tokens}"
+        f"    Input tokens: {final.usage.input_tokens} | "
+        f"Output tokens: {final.usage.output_tokens}"
     )
-    return response.content[0].text
+    return "".join(chunks)
 
 
 def run(
@@ -72,7 +95,7 @@ def run(
     print("Step 2 - Extracting results table...")
     prompt2 = load_prompt(str(prompt_dir / "prompt2_tab.txt"))
     context = _build_context(json1, md_tables)
-    json2 = parse_json(call(client, prompt2, context, model, max_tokens))
+    json2 = parse_json(call(client, prompt2, context, model, max_tokens, stream=True))
     with (output_dir / f"{slug}_json2.json").open("w", encoding="utf-8") as f:
         json.dump(json2, f, indent=2)
     print(f"    Saved {output_dir / f'{slug}_json2.json'}")

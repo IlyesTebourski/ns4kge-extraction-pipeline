@@ -161,6 +161,130 @@ def turtle_literal(value: object) -> str:
     return str(value).replace("\\", "\\\\").replace('"', '\\"')
 
 
+# ─── URI NORMALIZATION ALIASES ────────────────────────────────────────────────
+# These dicts operate on already-kebab-case URIs (output of uri()).
+# Example: "neural tensor network" -> uri() -> "neural-tensor-network" -> alias -> "ntn"
+
+_KGE_URI_ALIASES: dict[str, str] = {
+    "neural-tensor-model":    "ntn",
+    "neural-tensor-network":  "ntn",
+    "neural-tensor-networks": "ntn",
+    "structured-embedding":   "se",
+    "structured-embeddings":  "se",
+    "r-gcn":                  "rgcn",
+}
+
+# None = drop (too generic or unresolvable)
+_NS_URI_ALIASES: dict[str, str | None] = {
+    # Uniform
+    "uniform-sampling":                                       "uniform-negative-sampling",
+    "uniform-random-sampling":                                "uniform-random-negative-sampling",
+    # Random
+    "random-sampling":                                        "random-negative-sampling",
+    # Self-adversarial
+    "self-adversarial-sampling":                              "self-adversarial-negative-sampling",
+    "self-adv":                                               "self-adversarial-negative-sampling",
+    # Bernoulli
+    "bernoulli-sampling":                                     "bernoulli-negative-sampling",
+    # GAN-based
+    "generative-adversarial-network-based-negative-sampling": "gan-based-negative-sampling",
+    "gan":                                                    "gan-based-negative-sampling",
+    # KBGAN
+    "kb-gan":                                                 "kbgan",
+    "kbgan-sampling":                                         "kbgan",
+    # SANS
+    "structure-aware-negative-sampling":                      "sans",
+    # RW-SANS
+    "random-walk-structure-aware-negative-sampling":          "rw-sans",
+    # Uniform RW-SANS
+    "uniform-random-walk-structure-aware-negative-sampling":  "uniform-rw-sans",
+    # Static / dynamic
+    "static-distribution-sampling":                          "static-sampling",
+    "dynamic-distribution-sampling":                         "dynamic-negative-sampling",
+    # NSCaching
+    "ns-caching":                                            "nscaching",
+    "nscaching-sampling":                                    "nscaching",
+    # Nearest neighbour (typo)
+    "nearest-neighbour-sampling":                            "nearest-neighbor-sampling",
+    # Local closed world
+    "locally-closed-world-negative-sampling":                "local-closed-world-assumption-negative-sampling",
+    # Typed (typo + variant)
+    "typed-samplin":                                         "typed-negative-sampling",
+    "typed-sampling":                                        "typed-negative-sampling",
+    # Domain
+    "domain-sampling":                                       "domain-based-negative-sampling",
+    # Drop
+    "negative-sampling":                                     None,
+    "none-sampling":                                         None,
+}
+
+
+def normalize_uri_kge(u: str) -> str:
+    """Resolve KGE URI aliases. Input and output are kebab-case."""
+    return _KGE_URI_ALIASES.get(u, u)
+
+
+def normalize_uri_ns(u: str) -> str:
+    """Resolve NS URI aliases. Returns '' for suppressed/unknown entries."""
+    if re.match(r"^unknown(-\d+)?$", u):
+        return ""
+    result = _NS_URI_ALIASES.get(u, u)
+    return result if result is not None else ""
+
+
+def kge_uri(name: str) -> str:
+    """Canonical URI slug for a KGE model: uri() then alias normalization."""
+    return normalize_uri_kge(uri(name))
+
+
+def ns_uri(name: str) -> str:
+    """Canonical URI slug for an NS method: uri() then alias normalization.
+    Returns '' if the method should be dropped."""
+    return normalize_uri_ns(uri(name))
+
+
+# ─── RESULT NORMALIZATION ─────────────────────────────────────────────────────
+
+_RATIO_METRICS = {
+    "mrr", "hits-1", "hits-3", "hits-5", "hits-10", "hits-30", "hits-50",
+    "f1", "auc", "auroc", "auprc", "ap", "accuracy", "ndcg", "ndcg-5", "map",
+}
+
+
+def normalize_result(result: float, metric_slug: str) -> float:
+    """Normalize to [0,1] if the metric is a ratio reported as a percentage."""
+    if metric_slug in _RATIO_METRICS and result > 1:
+        return result / 100
+    return result
+
+
+# ─── DEDUPLICATION ───────────────────────────────────────────────────────────
+
+def dedup_configs(configs: list[dict]) -> list[dict]:
+    """Keep the best result per (kge, ns, dataset, task, metric) tuple.
+    For MR: lowest is best. For all other metrics: highest is best."""
+    best: dict = {}
+    for cfg in configs:
+        result = cfg.get("result")
+        if result is None:
+            continue
+        key = (
+            kge_uri(cfg.get("KGEModel", "")),
+            ns_uri(cfg.get("NSMethod", "")),
+            uri(cfg.get("Dataset", "")),
+            uri(cfg.get("Task", "")),
+            uri(cfg.get("Metric", "")),
+        )
+        if key not in best:
+            best[key] = cfg
+        else:
+            current = best[key]["result"]
+            is_mr = key[4] == "mr"
+            if (is_mr and result < current) or (not is_mr and result > current):
+                best[key] = cfg
+    return list(best.values())
+
+
 # ─── JSON MERGE ──────────────────────────────────────────────────────────────
 
 def merge_jsons(json1: dict, json2: dict) -> dict:
@@ -207,13 +331,13 @@ def json_to_ttl(merged: dict, slug: str) -> str:
     def add(s): lines.append(s)
 
     art          = merged.get("Article", {})
-    proposed_ns  = merged.get("proposedNSMethod", "")
-    proposed_kge = merged.get("proposedKGEModel", "")
-    mentioned_ns = merged.get("mentionedNSMethods", [])
-    mentioned_kge= merged.get("mentionedKGEModels", [])
+    proposed_ns  = ns_uri(merged.get("proposedNSMethod", ""))
+    proposed_kge = kge_uri(merged.get("proposedKGEModel", ""))
+    mentioned_ns = list(filter(None, (ns_uri(m) for m in merged.get("mentionedNSMethods", []))))
+    mentioned_kge = list(filter(None, (kge_uri(m) for m in merged.get("mentionedKGEModels", []))))
     exp          = merged.get("Experimentation", {})
     proto        = exp.get("TrainingProtocol", {})
-    configs      = exp.get("Configurations", [])
+    configs      = dedup_configs(exp.get("Configurations", []))
 
 # ── Article ───────────────────────────────────────────────────────────────
     article = article_ref(slug)
@@ -344,14 +468,18 @@ def json_to_ttl(merged: dict, slug: str) -> str:
         if cfg.get("Dataset"): add(f'{cid} ns4kge:hasDataset {entity_ref("dataset", cfg["Dataset"])} .')
         if cfg.get("Metric"):  add(f'{cid} ns4kge:hasMetric  {entity_ref("metric", cfg["Metric"])} .')
         if cfg.get("KGEModel"):
-            declare_kge(cfg["KGEModel"])
-            add(f'{cid} ns4kge:hasKGEModel {entity_ref("kge-model", cfg["KGEModel"])} .')
+            k = kge_uri(cfg["KGEModel"])
+            declare_kge(k)
+            add(f'{cid} ns4kge:hasKGEModel {entity_ref("kge-model", k)} .')
         ns = cfg.get("NSMethod", "")
         if ns and ns != "Unknown":
-            declare_ns(ns)
-            add(f'{cid} ns4kge:hasNSMethod {entity_ref("ns-method", ns)} .')
+            k = ns_uri(ns)
+            if k:
+                declare_ns(k)
+                add(f'{cid} ns4kge:hasNSMethod {entity_ref("ns-method", k)} .')
         if cfg.get("result") is not None:
-            add(f'{cid} ns4kge:result "{cfg["result"]}"^^xsd:decimal .')
+            normalized = normalize_result(float(cfg["result"]), uri(cfg.get("Metric", "")))
+            add(f'{cid} ns4kge:result "{format_decimal(normalized)}"^^xsd:decimal .')
         add("")
 
     return "\n".join(lines)
