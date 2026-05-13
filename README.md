@@ -10,15 +10,14 @@ LLM-assisted pipeline that extracts structured negative-sampling information fro
 - `docs/reviewer_tutorial.md` gives a concise reviewer workflow from synthetic input to validation.
 
 ## Version
-- Current artifact version: `v1.0.0`.
-- For the first public GitHub release, create the release/tag as `v1.0.0`.
+- Current artifact version: `v1.0.1`.
 
 ## Resource Availability
 - Repository: `https://github.com/IlyesTebourski/ns4kge-extraction-pipeline`.
-- Release target: `v1.0.0`.
-- Release date: 2026-05-06.
+- Release: `v1.0.1`.
+- Release date: 2026-05-13.
 - License: Apache-2.0.
-- Zenodo DOI: `https://doi.org/10.5281/zenodo.20059136`.
+- Zenodo DOI: `https://doi.org/10.5281/zenodo.20160460`.
 - Ontology artifact: `https://doi.org/10.5281/zenodo.20058306` and `https://github.com/IlyesTebourski/ns4kge-ontology`.
 - KG artifact: `https://github.com/IlyesTebourski/ns4kge-kg`.
 
