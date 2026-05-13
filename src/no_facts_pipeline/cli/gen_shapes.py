@@ -14,8 +14,8 @@ OWL_MAX = URIRef("http://www.w3.org/2002/07/owl#maxCardinality")
 
 
 def generate_shapes(
-    ontology_path: str | Path = "../ns4kge-ontology/ontology/NSArticles_ontology.ttl",
-    shapes_path: str | Path = "../ns4kge-ontology/ontology/NSArticles_shapes.ttl",
+    ontology_path: str | Path = "../ns4kge-ontology/ontology/ns4kge_ontology.ttl",
+    shapes_path: str | Path = "../ns4kge-ontology/ontology/ns4kge_shapes.ttl",
 ) -> Path:
     ontology_path = Path(ontology_path)
     shapes_path = Path(shapes_path)
@@ -111,8 +111,8 @@ def generate_shapes(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--ontology", default="../ns4kge-ontology/ontology/NSArticles_ontology.ttl")
-    parser.add_argument("--out", default="../ns4kge-ontology/ontology/NSArticles_shapes.ttl")
+    parser.add_argument("--ontology", default="../ns4kge-ontology/ontology/ns4kge_ontology.ttl")
+    parser.add_argument("--out", default="../ns4kge-ontology/ontology/ns4kge_shapes.ttl")
     args = parser.parse_args()
     generate_shapes(ontology_path=args.ontology, shapes_path=args.out)
 

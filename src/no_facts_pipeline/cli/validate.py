@@ -9,8 +9,8 @@ from rdflib import Graph
 
 
 def run_validation(
-    data: str | Path = "../ns4kge-kg/kg/NSArticles_populated.ttl",
-    shapes: str | Path = "../ns4kge-ontology/ontology/NSArticles_shapes.ttl",
+    data: str | Path = "../ns4kge-kg/kg/ns4kge_populated.ttl",
+    shapes: str | Path = "../ns4kge-ontology/ontology/ns4kge_shapes.ttl",
 ) -> bool:
     data = Path(data)
     shapes = Path(shapes)
@@ -41,8 +41,8 @@ def run_validation(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--data", default="../ns4kge-kg/kg/NSArticles_populated.ttl")
-    parser.add_argument("--shapes", default="../ns4kge-ontology/ontology/NSArticles_shapes.ttl")
+    parser.add_argument("--data", default="../ns4kge-kg/kg/ns4kge_populated.ttl")
+    parser.add_argument("--shapes", default="../ns4kge-ontology/ontology/ns4kge_shapes.ttl")
     args = parser.parse_args()
     sys.exit(0 if run_validation(data=args.data, shapes=args.shapes) else 1)
 

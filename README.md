@@ -67,20 +67,20 @@ uv run nofacts-postproc ../ns4kge-kg/per_article/eans_merged.json --output-dir .
 Assemble the populated KG from all per-article TTL files:
 
 ```bash
-uv run nofacts-populate-onto --output-dir ../ns4kge-kg/per_article --ontology ../ns4kge-ontology/ontology/NSArticles_ontology.ttl --out ../ns4kge-kg/kg/NSArticles_populated.ttl
+uv run nofacts-populate-onto --output-dir ../ns4kge-kg/per_article --ontology ../ns4kge-ontology/ontology/ns4kge_ontology.ttl --out ../ns4kge-kg/kg/ns4kge_populated.ttl
 ```
 
 Validate the populated KG:
 
 ```bash
-uv run nofacts-validate --data ../ns4kge-kg/kg/NSArticles_populated.ttl --shapes ../ns4kge-ontology/ontology/NSArticles_shapes.ttl
+uv run nofacts-validate --data ../ns4kge-kg/kg/ns4kge_populated.ttl --shapes ../ns4kge-ontology/ontology/ns4kge_shapes.ttl
 ```
 
 Run competency and diagnostic queries:
 
 ```bash
-uv run nofacts-query --data ../ns4kge-kg/kg/NSArticles_populated.ttl
-uv run nofacts-debug --data ../ns4kge-kg/kg/NSArticles_populated.ttl
+uv run nofacts-query --data ../ns4kge-kg/kg/ns4kge_populated.ttl
+uv run nofacts-debug --data ../ns4kge-kg/kg/ns4kge_populated.ttl
 ```
 
 ## Inputs And Outputs
@@ -106,7 +106,7 @@ uv run nofacts-postproc fixtures/synthetic_merged.json --output-dir /tmp/ns4kge-
 Validate the released KG artifact, assuming the three sibling artifact repositories are checked out next to each other:
 
 ```bash
-uv run nofacts-validate --data ../ns4kge-kg/kg/NSArticles_populated.ttl --shapes ../ns4kge-ontology/ontology/NSArticles_shapes.ttl
+uv run nofacts-validate --data ../ns4kge-kg/kg/ns4kge_populated.ttl --shapes ../ns4kge-ontology/ontology/ns4kge_shapes.ttl
 ```
 
 For a fuller tutorial, see `docs/reviewer_tutorial.md`.

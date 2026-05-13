@@ -62,8 +62,8 @@ def slug_from_path(path: str | Path) -> str:
 
 def populate(
     output_dir: str | Path = "../ns4kge-kg/per_article",
-    ontology: str | Path = "../ns4kge-ontology/ontology/NSArticles_ontology.ttl",
-    out: str | Path = "../ns4kge-kg/kg/NSArticles_populated.ttl",
+    ontology: str | Path = "../ns4kge-ontology/ontology/ns4kge_ontology.ttl",
+    out: str | Path = "../ns4kge-kg/kg/ns4kge_populated.ttl",
 ) -> Path:
     output_dir = Path(output_dir)
     ontology = Path(ontology)
@@ -110,8 +110,8 @@ def populate(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", "--output_dir", default="../ns4kge-kg/per_article")
-    parser.add_argument("--ontology", default="../ns4kge-ontology/ontology/NSArticles_ontology.ttl")
-    parser.add_argument("--out", default="../ns4kge-kg/kg/NSArticles_populated.ttl")
+    parser.add_argument("--ontology", default="../ns4kge-ontology/ontology/ns4kge_ontology.ttl")
+    parser.add_argument("--out", default="../ns4kge-kg/kg/ns4kge_populated.ttl")
     args = parser.parse_args()
     populate(output_dir=args.output_dir, ontology=args.ontology, out=args.out)
 

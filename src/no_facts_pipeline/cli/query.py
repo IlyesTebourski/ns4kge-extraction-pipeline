@@ -297,7 +297,7 @@ def run_query(graph: Graph, title: str, query: str, limit: int) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--data", default="../ns4kge-kg/kg/NSArticles_populated.ttl")
+    parser.add_argument("--data", default="../ns4kge-kg/kg/ns4kge_populated.ttl")
     parser.add_argument("--limit", type=int, default=20)
     args = parser.parse_args()
 

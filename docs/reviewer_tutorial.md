@@ -49,15 +49,15 @@ The generated per-article TTL intentionally omits prefixes. This mirrors the pap
 Assuming the companion ontology and KG repositories are present as siblings:
 
 ```bash
-uv run nofacts-validate --data ../ns4kge-kg/kg/NSArticles_populated.ttl --shapes ../ns4kge-ontology/ontology/NSArticles_shapes.ttl
+uv run nofacts-validate --data ../ns4kge-kg/kg/ns4kge_populated.ttl --shapes ../ns4kge-ontology/ontology/ns4kge_shapes.ttl
 ```
 
 Expected result for this release: `Conforms: True`.
 
 ## Query The Released KG
 ```bash
-uv run nofacts-query --data ../ns4kge-kg/kg/NSArticles_populated.ttl
-uv run nofacts-debug --data ../ns4kge-kg/kg/NSArticles_populated.ttl
+uv run nofacts-query --data ../ns4kge-kg/kg/ns4kge_populated.ttl
+uv run nofacts-debug --data ../ns4kge-kg/kg/ns4kge_populated.ttl
 ```
 
 These commands reproduce the competency-query and diagnostic outputs stored in the KG artifact reports.
