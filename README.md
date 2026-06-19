@@ -42,6 +42,25 @@ The default hosted LLM models wired in this release are:
 - Claude pipeline: `claude-opus-4-6`.
 - GPT pipeline: `gpt-4o`.
 
+The pipeline is model-agnostic. Besides the two hosted providers above, the
+`openweight` backend drives any **OpenAI-compatible** server, which is how
+open-weight models (Llama, Mistral, Qwen, DeepSeek, ...) are served by runtimes
+such as vLLM, Ollama, TGI, Together, Groq or OpenRouter. Point it at the
+endpoint and request a model by name:
+
+```bash
+uv run nofacts-pipeline ../mds/EANS.md \
+  --model openweight \
+  --base-url http://localhost:8000/v1 \
+  --model-name meta-llama/Llama-3.1-70B-Instruct \
+  --api-key-env OPENWEIGHT_API_KEY
+```
+
+`--base-url` is required for `openweight`; `--api-key-env` names the environment
+variable holding the endpoint's key (defaults to `OPENAI_API_KEY`; for a local
+server with no auth, set it to any non-empty value). The same flags are
+available on `nofacts-run-all` for batch extraction.
+
 Reviewer-safe tests and postprocessing do not require API keys.
 
 ## Main Commands

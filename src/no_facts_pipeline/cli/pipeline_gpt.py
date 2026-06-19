@@ -39,9 +39,14 @@ def run(
     sidecar_dir: str | Path | None = None,
     model: str = DEFAULT_MODEL,
     max_tokens: int = DEFAULT_MAX_TOKENS,
+    base_url: str | None = None,
+    api_key_env: str = "OPENAI_API_KEY",
 ) -> dict:
     load_dotenv()
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    # base_url=None keeps the default OpenAI endpoint. Pointing it at any
+    # OpenAI-compatible server (vLLM, Ollama, TGI, Together, Groq, ...) lets the
+    # same code drive open-weight models without any other change.
+    client = OpenAI(api_key=os.getenv(api_key_env), base_url=base_url)
 
     md_path = Path(md_path)
     output_dir = Path(output_dir)
@@ -111,6 +116,17 @@ def main() -> None:
     parser.add_argument("--sidecar-dir", default=None)
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--max-tokens", type=int, default=DEFAULT_MAX_TOKENS)
+    parser.add_argument(
+        "--base-url",
+        default=None,
+        help="OpenAI-compatible endpoint (e.g. http://localhost:8000/v1 for vLLM/Ollama). "
+        "Leave unset to use the default OpenAI API.",
+    )
+    parser.add_argument(
+        "--api-key-env",
+        default="OPENAI_API_KEY",
+        help="Environment variable holding the API key for the chosen endpoint.",
+    )
     args = parser.parse_args()
     run(
         args.md_path,
@@ -119,6 +135,8 @@ def main() -> None:
         sidecar_dir=args.sidecar_dir,
         model=args.model,
         max_tokens=args.max_tokens,
+        base_url=args.base_url,
+        api_key_env=args.api_key_env,
     )
 
 
