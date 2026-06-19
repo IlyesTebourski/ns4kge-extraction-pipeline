@@ -25,6 +25,9 @@ def compact_term(value: object) -> str:
 
 
 QUERIES = [
+    # ------------------------------------------------------------------
+    # Use Case 1 - Structured exploration of the literature
+    # ------------------------------------------------------------------
     (
         "CQ1 - Datasets most frequently used to evaluate negative sampling methods",
         """
@@ -40,7 +43,7 @@ QUERIES = [
         """,
     ),
     (
-        "CQ2 - KGE models most associated with each negative sampling method",
+        "CQ2 - KGE models most commonly associated with particular NS strategies",
         """
         SELECT ?nsMethod ?kgeModel (COUNT(DISTINCT ?config) AS ?count) WHERE {
             ?config rdf:type ns4kge:Configuration .
@@ -52,7 +55,7 @@ QUERIES = [
         """,
     ),
     (
-        "CQ3 - Evaluation metrics most frequently reported",
+        "CQ3 - Evaluation metrics typically reported",
         """
         SELECT ?metric (COUNT(DISTINCT ?config) AS ?nbConfigs) (COUNT(DISTINCT ?article) AS ?nbArticles) WHERE {
             ?article rdf:type ns4kge:Article .
@@ -77,43 +80,73 @@ QUERIES = [
         ORDER BY DESC(?count)
         """,
     ),
+    # ------------------------------------------------------------------
+    # Use Case 2 - Reporting coverage and comparability
+    # ------------------------------------------------------------------
     (
-        "CQ5 - Completeness of experimental descriptions by article",
+        "CQ5 - Experimental parameters: how often reported vs missing across papers",
         """
-        SELECT ?article
-            (IF(BOUND(?opt),  "yes", "no") AS ?hasOptimizer)
-            (IF(BOUND(?lr),   "yes", "no") AS ?hasLR)
-            (IF(BOUND(?loss), "yes", "no") AS ?hasLoss)
-            (IF(BOUND(?hw),   "yes", "no") AS ?hasHardware)
-            (IF(BOUND(?nsr),  "yes", "no") AS ?hasNSRatio)
+        SELECT ?dimension
+            (COUNT(DISTINCT ?reported) AS ?nbReported)
+            (COUNT(DISTINCT ?missing) AS ?nbMissing)
         WHERE {
-            ?article rdf:type ns4kge:Article .
-            ?article ns4kge:hasExperimentation ?exp .
-            ?exp ns4kge:hasTrainingProtocol ?tp .
-            OPTIONAL { ?tp ns4kge:hasOptimizer ?opt . }
-            OPTIONAL { ?tp ns4kge:learningRate ?lr . }
-            OPTIONAL { ?tp ns4kge:hasLossFunction ?loss . }
-            OPTIONAL { ?tp ns4kge:hasHardware ?hw . }
-            OPTIONAL { ?tp ns4kge:nsRatio ?nsr . }
+            {
+                BIND("optimizer" AS ?dimension)
+                ?article rdf:type ns4kge:Article .
+                ?article ns4kge:hasExperimentation ?exp .
+                ?exp ns4kge:hasTrainingProtocol ?tp .
+                OPTIONAL { ?tp ns4kge:hasOptimizer ?v . }
+            } UNION {
+                BIND("learningRate" AS ?dimension)
+                ?article rdf:type ns4kge:Article .
+                ?article ns4kge:hasExperimentation ?exp .
+                ?exp ns4kge:hasTrainingProtocol ?tp .
+                OPTIONAL { ?tp ns4kge:learningRate ?v . }
+            } UNION {
+                BIND("lossFunction" AS ?dimension)
+                ?article rdf:type ns4kge:Article .
+                ?article ns4kge:hasExperimentation ?exp .
+                ?exp ns4kge:hasTrainingProtocol ?tp .
+                OPTIONAL { ?tp ns4kge:hasLossFunction ?v . }
+            } UNION {
+                BIND("hardware" AS ?dimension)
+                ?article rdf:type ns4kge:Article .
+                ?article ns4kge:hasExperimentation ?exp .
+                ?exp ns4kge:hasTrainingProtocol ?tp .
+                OPTIONAL { ?tp ns4kge:hasHardware ?v . }
+            } UNION {
+                BIND("nsRatio" AS ?dimension)
+                ?article rdf:type ns4kge:Article .
+                ?article ns4kge:hasExperimentation ?exp .
+                ?exp ns4kge:hasTrainingProtocol ?tp .
+                OPTIONAL { ?tp ns4kge:nsRatio ?v . }
+            }
+            BIND(IF(BOUND(?v), ?article, ?none) AS ?reported)
+            BIND(IF(BOUND(?v), ?none, ?article) AS ?missing)
         }
-        ORDER BY ?article
+        GROUP BY ?dimension
+        ORDER BY DESC(?nbMissing)
         """,
     ),
     (
-        "CQ6 - Underrepresented negative sampling method and dataset combinations",
+        "CQ6 - NS methods evaluated across the fewest datasets and KGE models",
         """
-        SELECT ?nsMethod ?dataset (COUNT(DISTINCT ?config) AS ?count) WHERE {
+        SELECT ?nsMethod
+            (COUNT(DISTINCT ?dataset) AS ?nbDatasets)
+            (COUNT(DISTINCT ?kgeModel) AS ?nbModels)
+            (COUNT(DISTINCT ?config) AS ?nbConfigs)
+        WHERE {
             ?config rdf:type ns4kge:Configuration .
             ?config ns4kge:hasNSMethod ?nsMethod .
-            ?config ns4kge:hasDataset ?dataset .
+            OPTIONAL { ?config ns4kge:hasDataset ?dataset . }
+            OPTIONAL { ?config ns4kge:hasKGEModel ?kgeModel . }
         }
-        GROUP BY ?nsMethod ?dataset
-        HAVING (COUNT(DISTINCT ?config) = 1)
-        ORDER BY ?nsMethod ?dataset
+        GROUP BY ?nsMethod
+        ORDER BY ?nbDatasets ?nbModels ?nsMethod
         """,
     ),
     (
-        "CQ7 - Articles with incomplete experimental configurations",
+        "CQ7 - Articles that do not fully describe their experimental configuration",
         """
         SELECT ?article
             (IF(!BOUND(?opt),  "missing", "ok") AS ?optimizer)
@@ -135,48 +168,11 @@ QUERIES = [
         ORDER BY ?article
         """,
     ),
+    # ------------------------------------------------------------------
+    # Use Case 3 - Exploration of experimental configurations
+    # ------------------------------------------------------------------
     (
-        "CQ8 - Experimental dimensions most often missing",
-        """
-        SELECT ?dimension (COUNT(DISTINCT ?article) AS ?nbMissing) WHERE {
-            {
-                BIND("optimizer" AS ?dimension)
-                ?article rdf:type ns4kge:Article .
-                ?article ns4kge:hasExperimentation ?exp .
-                ?exp ns4kge:hasTrainingProtocol ?tp .
-                FILTER NOT EXISTS { ?tp ns4kge:hasOptimizer ?v . }
-            } UNION {
-                BIND("learningRate" AS ?dimension)
-                ?article rdf:type ns4kge:Article .
-                ?article ns4kge:hasExperimentation ?exp .
-                ?exp ns4kge:hasTrainingProtocol ?tp .
-                FILTER NOT EXISTS { ?tp ns4kge:learningRate ?v . }
-            } UNION {
-                BIND("lossFunction" AS ?dimension)
-                ?article rdf:type ns4kge:Article .
-                ?article ns4kge:hasExperimentation ?exp .
-                ?exp ns4kge:hasTrainingProtocol ?tp .
-                FILTER NOT EXISTS { ?tp ns4kge:hasLossFunction ?v . }
-            } UNION {
-                BIND("hardware" AS ?dimension)
-                ?article rdf:type ns4kge:Article .
-                ?article ns4kge:hasExperimentation ?exp .
-                ?exp ns4kge:hasTrainingProtocol ?tp .
-                FILTER NOT EXISTS { ?tp ns4kge:hasHardware ?v . }
-            } UNION {
-                BIND("nsRatio" AS ?dimension)
-                ?article rdf:type ns4kge:Article .
-                ?article ns4kge:hasExperimentation ?exp .
-                ?exp ns4kge:hasTrainingProtocol ?tp .
-                FILTER NOT EXISTS { ?tp ns4kge:nsRatio ?v . }
-            }
-        }
-        GROUP BY ?dimension
-        ORDER BY DESC(?nbMissing)
-        """,
-    ),
-    (
-        "CQ9 - Negative sampling methods evaluated on dataset/fb15k-237",
+        "CQ8 - Negative sampling methods evaluated on a given dataset (dataset/fb15k-237)",
         """
         SELECT DISTINCT ?nsMethod (COUNT(DISTINCT ?article) AS ?nbArticles) WHERE {
             ?article rdf:type ns4kge:Article .
@@ -190,7 +186,7 @@ QUERIES = [
         """,
     ),
     (
-        "CQ10 - Most frequent configurations for link prediction",
+        "CQ9 - Most frequent configurations for link-prediction tasks",
         """
         SELECT ?dataset ?kgeModel ?nsMethod ?metric (COUNT(DISTINCT ?config) AS ?count) WHERE {
             ?config rdf:type ns4kge:Configuration .
@@ -206,7 +202,7 @@ QUERIES = [
         """,
     ),
     (
-        "CQ11 - Similar configurations with divergent results",
+        "CQ10 - Similar experimental configurations with strongly diverging results",
         """
         SELECT ?dataset ?kgeModel ?metric
             (MIN(?result) AS ?minResult)
@@ -229,53 +225,31 @@ QUERIES = [
         """,
     ),
     (
-        "CQ12 - Best negative sampling method by task and dataset according to maximum result",
+        "CQ11 - Performance differences associated with changes in training configuration",
         """
-        SELECT ?task ?dataset ?nsMethod ?kgeModel ?metric (MAX(?result) AS ?bestResult) WHERE {
-            ?config rdf:type ns4kge:Configuration .
-            ?config ns4kge:hasTask ?task .
-            ?config ns4kge:hasDataset ?dataset .
-            ?config ns4kge:hasNSMethod ?nsMethod .
-            ?config ns4kge:hasKGEModel ?kgeModel .
-            ?config ns4kge:hasMetric ?metric .
-            ?config ns4kge:result ?result .
-        }
-        GROUP BY ?task ?dataset ?nsMethod ?kgeModel ?metric
-        ORDER BY ?task ?dataset DESC(?bestResult)
-        """,
-    ),
-    (
-        "UC1 - Negative sampling method, dataset, and KGE model combinations evaluated in the literature",
-        """
-        SELECT ?nsMethod ?dataset ?kgeModel (COUNT(?config) AS ?count) WHERE {
-            ?config rdf:type ns4kge:Configuration .
-            ?config ns4kge:hasNSMethod ?nsMethod .
-            ?config ns4kge:hasDataset ?dataset .
-            ?config ns4kge:hasKGEModel ?kgeModel .
-        }
-        GROUP BY ?nsMethod ?dataset ?kgeModel
-        ORDER BY DESC(?count)
-        """,
-    ),
-    (
-        "UC3 - Top link prediction configurations for experimental blueprinting",
-        """
-        SELECT ?method ?model ?optimizer ?loss ?dataset ?metric (MAX(?result) AS ?bestResult) WHERE {
+        SELECT ?dataset ?kgeModel ?nsMethod ?metric
+            (COUNT(DISTINCT ?optimizer) AS ?nbOptimizers)
+            (COUNT(DISTINCT ?loss) AS ?nbLosses)
+            (MIN(?result) AS ?minResult)
+            (MAX(?result) AS ?maxResult)
+            (MAX(?result) - MIN(?result) AS ?spread)
+        WHERE {
             ?article rdf:type ns4kge:Article .
             ?article ns4kge:hasExperimentation ?exp .
             ?exp ns4kge:hasConfiguration ?config .
             ?exp ns4kge:hasTrainingProtocol ?tp .
-            ?config ns4kge:hasTask <task/link-prediction> .
             ?config ns4kge:hasDataset ?dataset .
-            ?config ns4kge:hasNSMethod ?method .
-            ?config ns4kge:hasKGEModel ?model .
+            ?config ns4kge:hasKGEModel ?kgeModel .
+            ?config ns4kge:hasNSMethod ?nsMethod .
             ?config ns4kge:hasMetric ?metric .
             ?config ns4kge:result ?result .
             OPTIONAL { ?tp ns4kge:hasOptimizer ?optimizer . }
             OPTIONAL { ?tp ns4kge:hasLossFunction ?loss . }
         }
-        GROUP BY ?method ?model ?optimizer ?loss ?dataset ?metric
-        ORDER BY ?dataset ?metric DESC(?bestResult)
+        GROUP BY ?dataset ?kgeModel ?nsMethod ?metric
+        HAVING ((COUNT(DISTINCT ?optimizer) > 1 || COUNT(DISTINCT ?loss) > 1) && (MAX(?result) - MIN(?result)) > 0)
+        ORDER BY DESC(?spread)
+        LIMIT 15
         """,
     ),
 ]
